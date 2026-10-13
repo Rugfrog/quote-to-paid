@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Secrets — never commit these
+.env
+.env.*
+!.env.example
+
+# Local data: SQLite database and uploaded photos/logos
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+uploads/
+
+# Build output and tooling
+dist/
+coverage/
+playwright-report/
+test-results/
+*.log
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
