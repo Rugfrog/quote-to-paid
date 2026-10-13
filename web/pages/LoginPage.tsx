@@ -43,6 +43,14 @@ export function LoginPage() {
             <p className="small muted">Quotes, jobs and invoices</p>
           </div>
         </div>
+        {branding?.demo && (
+          <div style={{ marginBottom: 18 }}>
+            <Banner kind="info">
+              This is a public demo with a made-up business. Anyone can log in, and everything resets every{' '}
+              {branding.demo.reset_hours} hours, so please don’t enter real customer details.
+            </Banner>
+          </div>
+        )}
         <form className="form" onSubmit={submit} noValidate>
           {error && <Banner>{error}</Banner>}
           <TextField
@@ -73,6 +81,17 @@ export function LoginPage() {
           Owner: gary@example.com / demo1234
           <br />
           Setup team: admin@example.com / agency1234
+          <div style={{ marginTop: 10 }}>
+            <Button
+              size="sm"
+              onClick={() => {
+                setEmail('gary@example.com');
+                setPassword('demo1234');
+              }}
+            >
+              Fill in the owner login
+            </Button>
+          </div>
         </div>
       </main>
     </div>

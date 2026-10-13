@@ -1,0 +1,30 @@
+# Render.com Blueprint: runs Quote to Paid as a public demo website.
+# In Render: New → Blueprint → pick this repo. Every push to main redeploys.
+#
+# The free plan sleeps after 15 minutes without visitors (the first visit after
+# that takes about a minute) and its disk is wiped on each restart or deploy.
+# That's fine for the demo: the app re-creates the demo business on start-up.
+services:
+  - type: web
+    name: quote-to-paid
+    runtime: node
+    plan: free
+    region: frankfurt # closest Render region to the UK
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/business/public
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: DEMO_MODE
+        value: "1"
+      - key: DEMO_RESET_HOURS
+        value: "6"
+      - key: TRUST_PROXY
+        value: "1"
+      - key: SESSION_SECRET
+        generateValue: true
+      # Leave empty to keep the AI quote builder in demo mode. If you add a real key,
+      # anyone using the public demo spends your credits.
+      - key: ANTHROPIC_API_KEY
+        sync: false

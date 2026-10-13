@@ -47,6 +47,8 @@ export interface PublicBranding {
   logo_url: string | null;
   phone: string;
   email: string;
+  /** Set when running as the public demo. */
+  demo: { reset_hours: number } | null;
 }
 
 export type Unit = 'm2' | 'm' | 'each' | 'day' | 'hour' | 'item';

@@ -38,6 +38,28 @@ describe('login', () => {
   });
 });
 
+describe('public demo mode', () => {
+  it('shows the demo notice and stops logins being changed', async () => {
+    process.env.DEMO_MODE = '1';
+    try {
+      const { app } = testApp();
+      const pub = await request(app).get('/api/business/public');
+      expect(pub.body.demo).toEqual({ reset_hours: 6 });
+      const agency = await loggedIn(app, 'admin@example.com', 'agency1234');
+      const res = await agency.put('/api/admin/users/1').send({ password: 'hijacked1' });
+      expect(res.status).toBe(403);
+      await loggedIn(app); // Gary's password still works
+    } finally {
+      delete process.env.DEMO_MODE;
+    }
+  });
+
+  it('is off unless switched on', async () => {
+    const { app } = testApp();
+    expect((await request(app).get('/api/business/public')).body.demo).toBeNull();
+  });
+});
+
 describe('business settings', () => {
   it('shows public branding without logging in', async () => {
     const { app } = testApp();

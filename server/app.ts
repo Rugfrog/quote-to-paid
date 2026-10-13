@@ -24,7 +24,8 @@ export function createApp(db: DB, options: AppOptions = {}): Express {
 
   const app = express();
   app.disable('x-powered-by');
-  app.set('trust proxy', 'loopback');
+  // Behind a host's proxy (e.g. Render), set TRUST_PROXY=1 so login rate limits see real visitor IPs.
+  app.set('trust proxy', process.env.TRUST_PROXY ? Number(process.env.TRUST_PROXY) : 'loopback');
 
   app.use((_req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');

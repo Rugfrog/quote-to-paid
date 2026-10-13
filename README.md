@@ -37,6 +37,27 @@ business, **Holme Valley Plastering & Building**.
 | `npm run typecheck` | Checks the TypeScript |
 | `npm run build` then `npm start` | Runs a production build on http://localhost:3001 (one server) |
 
+## Putting it online (public demo website)
+
+The repo includes `render.yaml`, so it can run as a free website on [Render](https://render.com):
+
+1. Sign up at render.com with your GitHub account.
+2. **New → Blueprint**, pick the `quote-to-paid` repo, and click **Apply**.
+3. After a few minutes you get an address like `https://quote-to-paid.onrender.com`.
+   Every push to `main` redeploys automatically.
+
+It runs in **public demo mode** (`DEMO_MODE=1`):
+
+- the login page explains it's a demo and has a one-tap "Fill in the owner login" button;
+- all data resets every 6 hours (`DEMO_RESET_HOURS`), and also on every restart or deploy;
+- logins can't be changed, so nobody can lock everyone else out.
+
+Free plan limits: the site sleeps after 15 minutes without visitors, and the first visit
+after that takes about a minute to wake it. Upgrade the Render plan to keep it awake.
+
+**Don't add a real `ANTHROPIC_API_KEY` to the public demo** unless you're happy for anyone
+using it to spend your credits. Without a key the AI quote builder uses demo mode.
+
 ## Rebranding for a new client
 
 Each client gets their own copy of the app (and their own database). To set one up:
