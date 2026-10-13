@@ -46,8 +46,8 @@ export function LoginPage() {
         {branding?.demo && (
           <div style={{ marginBottom: 18 }}>
             <Banner kind="info">
-              This is a public demo with a made-up business. Anyone can log in, and everything resets every{' '}
-              {branding.demo.reset_hours} hours, so please don’t enter real customer details.
+              {branding.demo_logins_visible ? 'This is a public demo with a made-up business. Anyone can log in, and ' : 'This is a demo with a made-up business. '}
+              Everything resets every {branding.demo.reset_hours} hours, so please don’t enter real customer details.
             </Banner>
           </div>
         )}
@@ -75,6 +75,7 @@ export function LoginPage() {
             Log in
           </Button>
         </form>
+        {(branding?.demo_logins_visible ?? true) && (
         <div className="login-hint">
           <strong>Demo logins</strong>
           <br />
@@ -93,6 +94,7 @@ export function LoginPage() {
             </Button>
           </div>
         </div>
+        )}
       </main>
     </div>
   );

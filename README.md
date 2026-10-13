@@ -42,21 +42,40 @@ business, **Holme Valley Plastering & Building**.
 The repo includes `render.yaml`, so it can run as a free website on [Render](https://render.com):
 
 1. Sign up at render.com with your GitHub account.
-2. **New → Blueprint**, pick the `quote-to-paid` repo, and click **Apply**.
-3. After a few minutes you get an address like `https://quote-to-paid.onrender.com`.
-   Every push to `main` redeploys automatically.
+2. **New → Blueprint**, pick the `quote-to-paid` repo.
+3. Render asks for the secret settings:
+   - `OWNER_PASSWORD`: the password you'll give friends for `gary@example.com`
+     (12+ characters; three or four random words works well);
+   - `AGENCY_PASSWORD`: a different one, just for you, for `admin@example.com`;
+   - `ANTHROPIC_API_KEY`: your Claude key (or leave blank for demo mode).
+4. Click **Apply**. After a few minutes you get an address like
+   `https://quote-to-paid.onrender.com`. Every push to `main` redeploys automatically.
 
-It runs in **public demo mode** (`DEMO_MODE=1`):
+### How the live site is protected
 
-- the login page explains it's a demo and has a one-tap "Fill in the owner login" button;
-- all data resets every 6 hours (`DEMO_RESET_HOURS`), and also on every restart or deploy;
-- logins can't be changed, so nobody can lock everyone else out.
+- **Private passwords.** `OWNER_PASSWORD` and `AGENCY_PASSWORD` live only in Render's
+  settings, never in the code (which is public). They replace `demo1234` and `agency1234`,
+  and the login page stops showing any logins.
+- **Everything is behind the login**, including the AI. Visitors who aren't logged in can
+  only see the login page (and, from Stage 2, customer quote links with long random tokens,
+  which never call the AI).
+- **Password guessing is blocked:** 10 wrong tries per person, or 20 per account from
+  anywhere, locks logins for 15 minutes. Passwords are stored hashed with bcrypt, and the
+  site is HTTPS only.
+- **Safety check:** with an `ANTHROPIC_API_KEY` set, the site refuses to start unless both
+  private passwords are set (12+ characters).
+- **Demo mode** (`DEMO_MODE=1`): data resets every 6 hours and on every deploy, and logins
+  can't be changed in the app.
+
+**Also set a monthly spend limit** in the Anthropic Console (Settings → Limits). It's the
+backstop if the password ever gets passed around. To change the password, edit
+`OWNER_PASSWORD` in Render. The site restarts with the new one.
+
+Without private passwords the site still runs, as an open demo with the logins shown on
+the login page. That's fine without an AI key.
 
 Free plan limits: the site sleeps after 15 minutes without visitors, and the first visit
 after that takes about a minute to wake it. Upgrade the Render plan to keep it awake.
-
-**Don't add a real `ANTHROPIC_API_KEY` to the public demo** unless you're happy for anyone
-using it to spend your credits. Without a key the AI quote builder uses demo mode.
 
 ## Rebranding for a new client
 

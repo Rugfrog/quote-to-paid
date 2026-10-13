@@ -38,8 +38,13 @@ export function seedDemo(db: DB, { fastHash = false } = {}): void {
         @account_number, @quote_terms, @default_validity_days, @default_deposit_bp, @payment_terms_days)`,
     ).run(b);
 
+    // On a hosted site, private passwords from the environment replace the public demo ones.
+    const overrides = { owner: process.env.OWNER_PASSWORD, agency: process.env.AGENCY_PASSWORD };
     const insertUser = db.prepare(`INSERT INTO users (email, name, password_hash, role) VALUES (?, ?, ?, ?)`);
-    for (const u of demoUsers) insertUser.run(u.email, u.name, bcrypt.hashSync(u.password, hashRounds), u.role);
+    for (const u of demoUsers) {
+      const password = overrides[u.role as 'owner' | 'agency'] || u.password;
+      insertUser.run(u.email, u.name, bcrypt.hashSync(password, hashRounds), u.role);
+    }
 
     const insertTeam = db.prepare(`INSERT INTO team_members (name, phone, role_label) VALUES (?, ?, ?)`);
     for (const t of demoTeam) insertTeam.run(t.name, t.phone, t.role_label);

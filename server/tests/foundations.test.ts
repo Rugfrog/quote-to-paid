@@ -1,5 +1,6 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
+import { startupProblems } from '../demo';
 import { parseCsv, parsePriceListCsv } from '../services/csv';
 import { takeNextRef } from '../services/numbering';
 import { loggedIn, testApp } from './helpers';
@@ -57,6 +58,58 @@ describe('public demo mode', () => {
   it('is off unless switched on', async () => {
     const { app } = testApp();
     expect((await request(app).get('/api/business/public')).body.demo).toBeNull();
+  });
+});
+
+describe('private passwords for the hosted site', () => {
+  it('replace the public demo passwords and hide them from the login page', async () => {
+    process.env.OWNER_PASSWORD = 'correct-horse-battery';
+    process.env.AGENCY_PASSWORD = 'staple-lantern-orbit';
+    try {
+      const { app } = testApp();
+      const pub = await request(app).get('/api/business/public');
+      expect(pub.body.demo_logins_visible).toBe(false);
+      const old = await request(app).post('/api/auth/login').send({ email: 'gary@example.com', password: 'demo1234' });
+      expect(old.status).toBe(401);
+      await loggedIn(app, 'gary@example.com', 'correct-horse-battery');
+      await loggedIn(app, 'admin@example.com', 'staple-lantern-orbit');
+    } finally {
+      delete process.env.OWNER_PASSWORD;
+      delete process.env.AGENCY_PASSWORD;
+    }
+  });
+
+  it('are required before a live site will start with an AI key', () => {
+    const base = { NODE_ENV: 'production', ANTHROPIC_API_KEY: 'sk-test' };
+    expect(startupProblems({ ...base })).toHaveLength(2);
+    expect(startupProblems({ ...base, OWNER_PASSWORD: 'short', AGENCY_PASSWORD: 'long-enough-pass' })[0]).toMatch(/at least 12/);
+    expect(startupProblems({ ...base, OWNER_PASSWORD: 'long-enough-pass', AGENCY_PASSWORD: 'long-enough-pass' })).toEqual([]);
+    expect(startupProblems({ NODE_ENV: 'production' })).toEqual([]); // no key: nothing to protect
+    expect(startupProblems({ ANTHROPIC_API_KEY: 'sk-test' })).toEqual([]); // running locally
+  });
+});
+
+describe('password guessing', () => {
+  it('locks an account after 20 wrong tries, even from different IP addresses', async () => {
+    process.env.TRUST_PROXY = '1';
+    try {
+      const { app } = testApp();
+      const email = 'gary@example.com';
+      for (let i = 0; i < 20; i++) {
+        const res = await request(app)
+          .post('/api/auth/login')
+          .set('X-Forwarded-For', `203.0.113.${i}`)
+          .send({ email, password: `guess-${i}` });
+        expect(res.status).toBe(401);
+      }
+      const locked = await request(app)
+        .post('/api/auth/login')
+        .set('X-Forwarded-For', '198.51.100.7')
+        .send({ email, password: 'demo1234' });
+      expect(locked.status).toBe(429);
+    } finally {
+      delete process.env.TRUST_PROXY;
+    }
   });
 });
 

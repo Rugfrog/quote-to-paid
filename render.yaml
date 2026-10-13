@@ -24,7 +24,15 @@ services:
         value: "1"
       - key: SESSION_SECRET
         generateValue: true
-      # Leave empty to keep the AI quote builder in demo mode. If you add a real key,
-      # anyone using the public demo spends your credits.
+      # Private passwords (12+ characters). Render asks for these when you create the
+      # Blueprint. They replace the demo passwords in the code (which is public) and
+      # hide the demo logins from the login page.
+      - key: OWNER_PASSWORD
+        sync: false
+      - key: AGENCY_PASSWORD
+        sync: false
+      # Turns on the real AI quote builder. The site refuses to start with a key
+      # unless both passwords above are set. Set a monthly spend limit in the
+      # Anthropic Console too.
       - key: ANTHROPIC_API_KEY
         sync: false

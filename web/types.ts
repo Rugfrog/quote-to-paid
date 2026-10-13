@@ -49,6 +49,8 @@ export interface PublicBranding {
   email: string;
   /** Set when running as the public demo. */
   demo: { reset_hours: number } | null;
+  /** False once private passwords are set on the host: the demo logins are then hidden. */
+  demo_logins_visible: boolean;
 }
 
 export type Unit = 'm2' | 'm' | 'each' | 'day' | 'hour' | 'item';

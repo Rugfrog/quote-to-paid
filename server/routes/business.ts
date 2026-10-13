@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { businessUpdateSchema } from '../../shared/schemas';
 import { requireUser } from '../auth';
 import { bool, nowIso, type DB } from '../db/db';
-import { demoResetHours, isDemoMode } from '../demo';
+import { demoLoginsVisible, demoResetHours, isDemoMode } from '../demo';
 import { HttpError, validate, withBools } from '../http';
 import { minimumNext, type DocKind } from '../services/numbering';
 import { deleteUpload, imageUpload, uploadUrl } from '../uploads';
@@ -26,6 +26,7 @@ export function publicBranding(row: Record<string, unknown>) {
     phone: row.phone,
     email: row.email,
     demo: isDemoMode() ? { reset_hours: demoResetHours() } : null,
+    demo_logins_visible: demoLoginsVisible(),
   };
 }
 

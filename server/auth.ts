@@ -24,24 +24,32 @@ declare global {
 export const SESSION_COOKIE = 'qtp_session';
 const SESSION_DAYS = 30;
 
-// Simple in-memory limit on login attempts: 10 tries per 15 minutes per IP + email.
-const attempts = new Map<string, { count: number; resetAt: number }>();
-const MAX_ATTEMPTS = 10;
+// In-memory limits on failed logins, per 15 minutes:
+//  - 10 per IP address + email (one person mistyping, or one machine guessing);
+//  - 20 per email from anywhere (guessing spread across many IP addresses).
+const MAX_PER_IP = 10;
+const MAX_PER_ACCOUNT = 20;
 const WINDOW_MS = 15 * 60 * 1000;
 const DUMMY_HASH = bcrypt.hashSync('not-a-real-password', 10);
 
-function tooManyAttempts(key: string): boolean {
-  const now = Date.now();
-  const entry = attempts.get(key);
-  if (!entry || entry.resetAt < now) return false;
-  return entry.count >= MAX_ATTEMPTS;
-}
-
-function recordFailure(key: string): void {
-  const now = Date.now();
-  const entry = attempts.get(key);
-  if (!entry || entry.resetAt < now) attempts.set(key, { count: 1, resetAt: now + WINDOW_MS });
-  else entry.count++;
+function attemptCounter() {
+  const attempts = new Map<string, { count: number; resetAt: number }>();
+  return {
+    tooMany(key: string, max: number): boolean {
+      const entry = attempts.get(key);
+      if (!entry || entry.resetAt < Date.now()) return false;
+      return entry.count >= max;
+    },
+    fail(key: string): void {
+      const now = Date.now();
+      const entry = attempts.get(key);
+      if (!entry || entry.resetAt < now) attempts.set(key, { count: 1, resetAt: now + WINDOW_MS });
+      else entry.count++;
+    },
+    clear(key: string): void {
+      attempts.delete(key);
+    },
+  };
 }
 
 /** Reads the session cookie and sets req.user if it's valid. Doesn't block anything. */
@@ -72,11 +80,13 @@ export const requireAgency: RequestHandler = (req, _res, next) => {
 
 export function authRouter(db: DB): Router {
   const router = Router();
+  const attempts = attemptCounter();
 
   router.post('/login', (req, res) => {
     const { email, password } = validate(loginSchema, req.body);
     const key = `${req.ip}|${email}`;
-    if (tooManyAttempts(key)) {
+    const accountKey = `account|${email}`;
+    if (attempts.tooMany(key, MAX_PER_IP) || attempts.tooMany(accountKey, MAX_PER_ACCOUNT)) {
       throw new HttpError(429, 'Too many tries. Please wait 15 minutes and try again.');
     }
     const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email) as
@@ -85,10 +95,12 @@ export function authRouter(db: DB): Router {
     // Compare against a dummy hash when the user doesn't exist, so timing doesn't reveal valid emails.
     const ok = bcrypt.compareSync(password, user?.password_hash ?? DUMMY_HASH);
     if (!user || !ok) {
-      recordFailure(key);
+      attempts.fail(key);
+      attempts.fail(accountKey);
       throw new HttpError(401, 'That email and password don’t match. Please try again.');
     }
-    attempts.delete(key);
+    attempts.clear(key);
+    attempts.clear(accountKey);
 
     const token = newToken();
     const expires = new Date(Date.now() + SESSION_DAYS * 86_400_000);

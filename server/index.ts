@@ -2,7 +2,13 @@ import 'dotenv/config';
 import { createApp } from './app';
 import { openDb } from './db/db';
 import { seedDemo } from './db/seed';
-import { demoResetHours, isDemoMode, startDemoResets } from './demo';
+import { applyPasswordOverrides, demoResetHours, isDemoMode, startDemoResets, startupProblems } from './demo';
+
+const problems = startupProblems();
+if (problems.length) {
+  console.error(`Not starting, to keep your AI credits safe:\n- ${problems.join('\n- ')}\nSee "Putting it online" in the README.`);
+  process.exit(1);
+}
 
 const db = openDb();
 
@@ -11,6 +17,8 @@ if (!db.prepare('SELECT 1 FROM business WHERE id = 1').get()) {
   seedDemo(db);
   console.log('First run: added the demo business (log in as gary@example.com / demo1234).');
 }
+
+applyPasswordOverrides(db);
 
 if (isDemoMode()) {
   startDemoResets(db);
