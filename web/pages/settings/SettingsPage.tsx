@@ -39,9 +39,6 @@ export function SettingsPage() {
           </Link>
         </li>
       </ul>
-      <p className="small muted" style={{ marginTop: 16 }}>
-        Message wording (quote and invoice emails, reminders) can be edited once the outbox arrives in the next stage.
-      </p>
     </>
   );
 }

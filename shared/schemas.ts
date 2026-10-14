@@ -172,6 +172,76 @@ export const userUpdateSchema = z.object({
   password: z.string().min(8, 'Use at least 8 characters').max(200).optional(),
 });
 
+// ---------- Quotes ----------
+
+export const QUOTE_SOURCES = ['blank', 'text', 'voice', 'photo'] as const;
+
+export const quoteLineSchema = z
+  .object({
+    description: required('a description', 500),
+    quantity_x100: z.number().int().min(1, 'Quantity must be more than 0').max(10_000_000),
+    unit: z.enum(UNITS),
+    unit_price_pence: pence.nullable(),
+    price_item_id: z.number().int().positive().nullable().default(null),
+    needs_price: z.boolean().default(false),
+  })
+  .refine((l) => l.needs_price || l.unit_price_pence !== null, {
+    message: 'Enter a price',
+    path: ['unit_price_pence'],
+  });
+
+export const quoteOptionSchema = z.object({
+  name: text(80).default(''),
+  recommended: z.boolean().default(false),
+  lines: z.array(quoteLineSchema).max(100, 'That’s a lot of lines: 100 is the most'),
+});
+
+export const quoteSaveSchema = z.object({
+  title: text(120),
+  intro_notes: text(2000),
+  exclusions: z.array(text(200)).max(30),
+  validity_days: z.number().int().min(1, 'At least 1 day').max(365),
+  deposit_bp: basisPoints,
+  options: z.array(quoteOptionSchema).min(1).max(3, 'Up to 3 options (good, better, best)'),
+});
+
+export type QuoteSaveInput = z.infer<typeof quoteSaveSchema>;
+
+export const quoteCreateSchema = z.object({
+  customer_id: z.number().int().positive(),
+  enquiry_id: z.number().int().positive().nullable().default(null),
+  source: z.enum(QUOTE_SOURCES).default('blank'),
+  brief: text(4000).default(''),
+  title: text(120).default(''),
+});
+
+export const aiFillSchema = z.object({
+  brief: text(4000).optional(),
+});
+
+export const acceptQuoteSchema = z.object({
+  name: required('your name', 120),
+  agreed: z.literal(true, { errorMap: () => ({ message: 'Please tick the box to accept' }) }),
+  option_id: z.number().int().positive().optional(),
+});
+
+export const declineQuoteSchema = z.object({
+  reason: text(1000).default(''),
+});
+
+export const questionSchema = z.object({
+  message: required('your question', 2000),
+});
+
+export const replySchema = z.object({
+  body: required('a message', 2000),
+});
+
+export const templateSchema = z.object({
+  subject: text(200),
+  body: required('the message', 4000),
+});
+
 /** Turn a zod error into { field: message } for forms. */
 export function fieldErrors(error: z.ZodError): Record<string, string> {
   const out: Record<string, string> = {};

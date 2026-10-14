@@ -30,10 +30,10 @@ export function HomePage() {
   const firstName = (user?.role === 'agency' ? business.owner_name : user?.name)?.split(' ')[0] ?? '';
 
   const actions: { to: string; label: string; sub: string; icon: IconName; primary?: boolean }[] = [
-    { to: '/enquiries/new', label: 'New enquiry', sub: 'Log a call or message', icon: 'phone', primary: true },
+    { to: '/quotes/new', label: 'New quote', sub: 'Say it, type it or snap it', icon: 'sparkle', primary: true },
+    { to: '/enquiries/new', label: 'New enquiry', sub: 'Log a call or message', icon: 'phone' },
+    { to: '/quotes', label: 'Quotes', sub: 'Drafts and sent', icon: 'quote' },
     { to: '/customers', label: 'Customers', sub: 'Find anyone fast', icon: 'users' },
-    { to: '/price-list', label: 'Price list', sub: 'Your rates', icon: 'list' },
-    { to: '/settings', label: 'Settings', sub: 'Branding and details', icon: 'settings' },
   ];
 
   return (
@@ -58,7 +58,7 @@ export function HomePage() {
         ))}
       </div>
 
-      <h2 className="section-title">New enquiries</h2>
+      <h2 className="section-title">New enquiries: tap one to quote it</h2>
       {error && <Banner>{error}</Banner>}
       {!enquiries && !error && <Spinner />}
       {enquiries && enquiries.length === 0 && (
@@ -72,7 +72,7 @@ export function HomePage() {
         <ul className="list card">
           {enquiries.map((e) => (
             <li key={e.id}>
-              <Link to={`/customers/${e.customer_id}`} className="list-row">
+              <Link to={`/quotes/new?enquiry=${e.id}`} className="list-row" aria-label={`Quote for ${e.customer_name}: ${e.description}`}>
                 <div className="grow">
                   <div className="title">{e.customer_name}</div>
                   <div className="meta">{e.description}</div>

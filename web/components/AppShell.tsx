@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useSession } from '../session';
 import { Icon, type IconName } from './Icon';
+import { NotificationsBell } from './NotificationsBell';
 import { BrandMark, Button, Sheet } from './ui';
 
 const mainNav: { to: string; label: string; icon: IconName }[] = [
@@ -58,6 +59,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </NavLink>
         )}
         <div className="spacer" />
+        <NotificationsBell className="nav-link" label />
         <div className="small muted" style={{ padding: '8px 12px' }}>
           Logged in as {user?.name}
         </div>
@@ -71,6 +73,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <header className="topbar">
           <BrandMark name={b.name} logoUrl={b.logo_url} size={34} />
           <span className="brand-name">{b.name}</span>
+          <NotificationsBell />
           <Link to="/customers" className="btn btn-ghost btn-icon" aria-label="Customers">
             <Icon name="users" />
           </Link>
@@ -92,7 +95,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             {item.label}
           </Link>
         ))}
-        <button className="nav-new" onClick={() => setNewOpen(true)} aria-label="Add something new">
+        <button className="nav-new" onClick={() => setNewOpen(true)} aria-label="New quote, enquiry or customer">
           <span className="fab">
             <Icon name="plus" size={26} strokeWidth={2.4} />
           </span>
@@ -117,6 +120,7 @@ function NewSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
     navigate(to);
   };
   const options: { to: string; icon: IconName; title: string; sub: string }[] = [
+    { to: '/quotes/new', icon: 'sparkle', title: 'New quote', sub: 'Say it, type it or snap it: priced in seconds' },
     { to: '/enquiries/new', icon: 'phone', title: 'New enquiry', sub: 'Someone’s been in touch about a job' },
     { to: '/customers?new=1', icon: 'user', title: 'New customer', sub: 'Add someone to your customer list' },
   ];

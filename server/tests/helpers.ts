@@ -9,7 +9,7 @@ import { seedDemo } from '../db/seed';
 /** A fresh seeded in-memory database and app for each test file. */
 export function testApp() {
   const db = openDb(':memory:');
-  seedDemo(db, { fastHash: true });
+  seedDemo(db, { fastHash: true, withQuotes: false });
   const uploadsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'qtp-uploads-'));
   const app = createApp(db, { uploadsDir });
   return { db, app, uploadsDir };

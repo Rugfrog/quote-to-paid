@@ -3,8 +3,8 @@
 A job system for UK tradespeople: enquiry → quote → job → invoice → paid.
 Built as a sales demo that can be rebranded for each client.
 
-> **Status:** Stage 1 of 7 (foundations). Quotes, jobs, invoices, the AI quote builder,
-> the dashboard and the outbox are built in later stages.
+> **Status:** Stages 1–3 done: foundations, the quote builder with AI quotes, the customer
+> quote page and the outbox. Jobs, invoices and the dashboard come next.
 
 ## Running it
 
@@ -27,6 +27,22 @@ business, **Holme Valley Plastering & Building**.
 
 **On your phone:** while `npm run dev` is running, open the "Network" address it prints
 (for example `http://192.168.0.20:5173`) on a phone connected to the same Wi-Fi.
+Voice notes need a secure (`https://`) address on phones, so they won't work over Wi-Fi like
+this. They do work on the live website, and on `localhost` on your computer.
+
+## The quote flow
+
+1. **New quote** (the big **+** button, or **Quote this** on an enquiry).
+2. Pick the customer, then **record a voice note**, type a description and/or add photos.
+3. **Build my quote**: lines are matched to your price list and priced from it. Anything
+   that isn't on the list is marked **Check price** and left out of the total until you price it.
+4. Edit anything: lines, quantities, notes, exclusions, deposit, validity, and up to three
+   good/better/best options. Changes save automatically.
+5. **Send**: the customer gets an email (or a text if there's no email) with a link like
+   `/q/…`. They can view it on their phone, download the PDF, ask a question, accept (typed
+   name + tick box) or decline. You get a notification and an email.
+6. The **Outbox** shows every message exactly as the customer would get it. Nothing is really
+   sent in the demo.
 
 ### Other commands
 
@@ -57,8 +73,10 @@ The repo includes `render.yaml`, so it can run as a free website on [Render](htt
   settings, never in the code (which is public). They replace `demo1234` and `agency1234`,
   and the login page stops showing any logins.
 - **Everything is behind the login**, including the AI. Visitors who aren't logged in can
-  only see the login page (and, from Stage 2, customer quote links with long random tokens,
-  which never call the AI).
+  only see the login page and customer quote links (long random tokens), which never call
+  the AI.
+- **A daily cap on AI quotes** (`AI_DAILY_LIMIT`, 50 on the live site). After that, quotes
+  use the built-in estimator until midnight.
 - **Password guessing is blocked:** 10 wrong tries per person, or 20 per account from
   anywhere, locks logins for 15 minutes. Passwords are stored hashed with bcrypt, and the
   site is HTTPS only.
@@ -98,12 +116,31 @@ Each client gets their own copy of the app (and their own database). To set one 
 
 ## Turning on the real AI
 
-The AI quote builder arrives in Stage 3. It will work without a key (demo mode, with built-in
-examples). To use Claude for real:
+Without a key, quotes use **demo mode**: a built-in estimator that recognises common
+plastering and building jobs (re-plastering, skimming, ceilings, Artex, coving, rendering,
+stud walls, lintels, chimney breasts, patch repairs) and measurements like "4 by 3 metres" or
+"40m²". It works offline and costs nothing.
 
-1. Copy `.env.example` to `.env`.
+To use Claude for real:
+
+1. Copy `.env.example` to `.env` (or, on the live site, set it in Render → Environment).
 2. Set `ANTHROPIC_API_KEY=` to your key from console.anthropic.com.
-3. Restart `npm run dev`.
+3. Restart `npm run dev`. The quote banner then says **Worked out by AI** instead of
+   **Demo mode**.
+
+How it works (`server/services/ai/`):
+
+- Claude gets the description, up to 4 photos and your price list **without prices**, and
+  must answer in a fixed JSON shape (structured outputs): lines with a price list id,
+  quantity and unit, plus exclusions, questions to ask and assumptions.
+- **Prices always come from your price list, never from the AI.** The server swaps in the
+  price and unit of the matching item; anything else is marked "check price".
+- Model: `claude-opus-5-5` at low effort, which keeps it quick. Set `ANTHROPIC_MODEL` to change
+  it, e.g. `claude-haiku-5-5` is much cheaper and faster, at some cost to accuracy.
+- If Claude declines a request, the API automatically retries on a fallback model.
+- If it fails or takes longer than 30 seconds, the quote is built by demo mode instead,
+  with a note saying so. What you typed is saved on the quote either way.
+- `AI_DAILY_LIMIT` (default 100) caps real AI quotes per day.
 
 `.env` is git-ignored. Never commit keys.
 
@@ -130,7 +167,8 @@ examples). To use Claude for real:
 - Owner logins use bcrypt-hashed passwords and an httpOnly session cookie. Only a hash of the
   session token is stored. Login attempts are rate-limited.
 - Every input is validated on the server (`shared/schemas.ts`, zod).
-- Customer links (from Stage 2) use 32-byte random tokens.
+- Customer links use 32-byte random tokens and only show what the customer needs (never your
+  private notes, the AI's questions or the history). Customer actions are rate-limited.
 - Uploads accept only JPEG/PNG/WebP/GIF (no SVG), up to 10 MB, saved with random names.
 
 ## Decisions made along the way
@@ -151,3 +189,16 @@ Where the brief left room, these are the choices made:
   everything is in the sidebar.
 - **Demo details are made up:** phone numbers from Ofcom's drama range (07700 900xxx),
   example.com emails, VAT number marked "(example)", sort code 12-34-56.
+- **Stages 2 and 3 were built together**, so the AI quote (the sales wow) reached the live
+  site sooner.
+- **Quotes can be edited after sending** until they're accepted, declined or expired. The
+  customer always sees the latest version.
+- **The owner can accept or decline on the customer's behalf** (e.g. a "yes" on the phone),
+  including from the preview page. The history records that it was the business, not the
+  customer. The owner opening the link while logged in doesn't count as the customer viewing it.
+- **Customers without an email get a text** with the link instead.
+- **Materials markup** in the price list is added as a line worth that % of the option's
+  current subtotal, at the moment you add it. The AI never uses markup or minimum-charge items.
+- **The "valid until" date is set when the quote is sent** (sending again restarts it).
+- **Demo data includes 10 quotes** at every stage (accepted, declined, opened, unopened, a
+  three-option quote and a draft with a price to check), spread over the last 7 weeks.

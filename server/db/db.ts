@@ -18,7 +18,20 @@ export function openDb(dbPath: string = process.env.DB_PATH ?? DEFAULT_DB_PATH):
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
   db.exec(fs.readFileSync(path.join(here, 'schema.sql'), 'utf8'));
+  migrate(db);
   return db;
+}
+
+/** Columns added after a table was first created. CREATE TABLE IF NOT EXISTS won't add them to old databases. */
+const ADDED_COLUMNS: { table: string; column: string; definition: string }[] = [
+  { table: 'quotes', column: 'brief', definition: "TEXT NOT NULL DEFAULT ''" },
+];
+
+function migrate(db: Database.Database): void {
+  for (const { table, column, definition } of ADDED_COLUMNS) {
+    const columns = db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
+    if (!columns.some((c) => c.name === column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
 }
 
 export function nowIso(): string {

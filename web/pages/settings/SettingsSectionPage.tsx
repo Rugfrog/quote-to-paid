@@ -9,6 +9,7 @@ import type { Business } from '../../types';
 import { NotFoundPage } from '../NotFoundPage';
 import { BrandingSettings } from './BrandingSettings';
 import { SECTIONS, type FieldDef } from './sections';
+import { MessagesSettings } from './MessagesSettings';
 import { TeamSettings } from './TeamSettings';
 
 export function SettingsSectionPage() {
@@ -21,6 +22,7 @@ export function SettingsSectionPage() {
       <PageHeader back={{ to: '/settings', label: 'Settings' }} title={section.title} subtitle={section.summary} />
       {section.custom === 'branding' && <BrandingSettings />}
       {section.custom === 'team' && <TeamSettings />}
+      {section.custom === 'messages' && <MessagesSettings />}
       {section.fields && <FieldsForm key={section.id} fields={section.fields} />}
     </>
   );

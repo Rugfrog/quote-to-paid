@@ -11,6 +11,11 @@ import { LoginPage } from './pages/LoginPage';
 import { MorePage } from './pages/MorePage';
 import { NewEnquiryPage } from './pages/NewEnquiryPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { OutboxPage } from './pages/OutboxPage';
+import { NewQuotePage } from './pages/quotes/NewQuotePage';
+import { QuoteEditorPage } from './pages/quotes/QuoteEditorPage';
+import { QuotesPage } from './pages/quotes/QuotesPage';
+import { CustomerQuotePage } from './public-pages/CustomerQuotePage';
 import { PriceListPage } from './pages/PriceListPage';
 import { SettingsPage } from './pages/settings/SettingsPage';
 import { SettingsSectionPage } from './pages/settings/SettingsSectionPage';
@@ -21,7 +26,8 @@ export function App() {
     <ToastProvider>
       <SessionProvider>
         <Routes>
-          {/* Customer-facing pages (no login) arrive in Stage 2: /q/:token etc. */}
+          {/* Customer-facing pages: no login, the token in the link is the key. */}
+          <Route path="/q/:token" element={<CustomerQuotePage />} />
           <Route path="/*" element={<OwnerApp />} />
         </Routes>
       </SessionProvider>
@@ -49,10 +55,12 @@ function OwnerApp() {
           path="/admin"
           element={user.role === 'agency' ? <AdminPage /> : <Navigate to="/" replace />}
         />
-        <Route path="/quotes/*" element={<ComingSoonPage area="quotes" />} />
+        <Route path="/quotes" element={<QuotesPage />} />
+        <Route path="/quotes/new" element={<NewQuotePage />} />
+        <Route path="/quotes/:id" element={<QuoteEditorPage />} />
         <Route path="/jobs/*" element={<ComingSoonPage area="jobs" />} />
         <Route path="/money/*" element={<ComingSoonPage area="money" />} />
-        <Route path="/outbox" element={<ComingSoonPage area="outbox" />} />
+        <Route path="/outbox" element={<OutboxPage />} />
         <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

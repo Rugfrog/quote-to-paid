@@ -442,6 +442,10 @@ button.list-row:hover { background: var(--surface-2); }
 
 .form { display: grid; gap: 16px; }
 .form-row { display: grid; gap: 16px; }
+/* Let grid children shrink below their content (e.g. long addresses that don't wrap). */
+.form > *,
+.form-row > *,
+.stack > * { min-width: 0; }
 @media (min-width: 560px) {
   .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
   .form-row.cols-3 { grid-template-columns: 2fr 1fr 1fr; }
@@ -474,7 +478,7 @@ button.list-row:hover { background: var(--surface-2); }
   font-size: 1rem; /* 16px stops iOS zooming in */
   transition: border-color 0.15s, box-shadow 0.15s;
 }
-.textarea { min-height: 96px; resize: vertical; line-height: 1.45; }
+.textarea { min-height: 96px; resize: vertical; line-height: 1.45; field-sizing: content; max-height: 60vh; }
 .input:focus,
 .select:focus,
 .textarea:focus {

@@ -10,17 +10,34 @@ import { businessRouter } from './routes/business';
 import { customersRouter } from './routes/customers';
 import { enquiriesRouter } from './routes/enquiries';
 import { priceItemsRouter } from './routes/priceItems';
+import { messagesRouter } from './routes/messages';
+import { publicRouter } from './routes/public';
+import { quotesRouter } from './routes/quotes';
 import { teamRouter } from './routes/team';
+import { createQuoteAi, type QuoteAi } from './services/ai';
+import { SimulatedSender, type MessageSender } from './services/messaging';
 
 export interface AppOptions {
   uploadsDir?: string;
   /** Serve the built web app (production). */
   serveWeb?: boolean;
+  /** How messages are sent. Defaults to the simulated outbox. */
+  sender?: MessageSender;
+  /** The quote estimator. Defaults to Claude if ANTHROPIC_API_KEY is set, otherwise demo mode. */
+  ai?: QuoteAi;
 }
 
 export function createApp(db: DB, options: AppOptions = {}): Express {
   const uploadsDir = options.uploadsDir ?? UPLOADS_DIR;
   fs.mkdirSync(uploadsDir, { recursive: true });
+  const sender = options.sender ?? new SimulatedSender(db);
+  const ai =
+    options.ai ??
+    createQuoteAi({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+      model: process.env.ANTHROPIC_MODEL,
+      dailyLimit: process.env.AI_DAILY_LIMIT ? Number(process.env.AI_DAILY_LIMIT) : undefined,
+    });
 
   const app = express();
   app.disable('x-powered-by');
@@ -46,6 +63,9 @@ export function createApp(db: DB, options: AppOptions = {}): Express {
   app.use('/api/enquiries', enquiriesRouter(db, uploadsDir));
   app.use('/api/team', teamRouter(db));
   app.use('/api/admin', adminRouter(db));
+  app.use('/api/quotes', quotesRouter(db, { sender, ai, uploadsDir }));
+  app.use('/api/public', publicRouter(db, { sender, uploadsDir }));
+  app.use('/api', messagesRouter(db));
 
   app.use('/api', (_req, _res, next) => next(new HttpError(404, 'Not found.')));
 

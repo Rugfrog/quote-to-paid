@@ -22,6 +22,9 @@ services:
         value: "6"
       - key: TRUST_PROXY
         value: "1"
+      # Most real AI quotes per day, as a spending backstop.
+      - key: AI_DAILY_LIMIT
+        value: "50"
       - key: SESSION_SECRET
         generateValue: true
       # Private passwords (12+ characters). Render asks for these when you create the

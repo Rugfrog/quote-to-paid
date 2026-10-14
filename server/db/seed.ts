@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DEFAULT_DB_PATH, UPLOADS_DIR, openDb, type DB } from './db';
+import { seedQuotes } from './seed-quotes';
 import { demoBusiness, demoCustomers, demoEnquiries, demoPriceList, demoTeam, demoTemplates, demoUsers } from './seed-data';
 
 function daysAgoIso(days: number, hour = 10): string {
@@ -25,7 +26,7 @@ export function clearAll(db: DB): void {
 }
 
 /** Fill an empty database with the demo business. */
-export function seedDemo(db: DB, { fastHash = false } = {}): void {
+export function seedDemo(db: DB, { fastHash = false, withQuotes = true } = {}): void {
   const hashRounds = fastHash ? 4 : 10;
   db.transaction(() => {
     const b = demoBusiness;
@@ -77,10 +78,11 @@ export function seedDemo(db: DB, { fastHash = false } = {}): void {
     );
     for (const t of demoTemplates) insertTemplate.run(t);
   })();
+  if (withQuotes) seedQuotes(db);
 }
 
 /** Wipe everything (including uploaded files) and re-seed. */
-export function resetDemo(db: DB, options?: { fastHash?: boolean }): void {
+export function resetDemo(db: DB, options?: { fastHash?: boolean; withQuotes?: boolean }): void {
   clearAll(db);
   if (fs.existsSync(UPLOADS_DIR)) {
     for (const file of fs.readdirSync(UPLOADS_DIR)) fs.rmSync(path.join(UPLOADS_DIR, file), { force: true });

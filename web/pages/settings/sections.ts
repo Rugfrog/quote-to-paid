@@ -23,7 +23,7 @@ export interface SectionDef {
   summary: string;
   icon: IconName;
   fields?: FieldDef[];
-  custom?: 'branding' | 'team';
+  custom?: 'branding' | 'team' | 'messages';
 }
 
 export const SECTIONS: SectionDef[] = [
@@ -87,6 +87,13 @@ export const SECTIONS: SectionDef[] = [
       { key: 'reminders_default_on', label: 'Send payment reminders automatically', type: 'toggle', hint: 'Polite reminders before and after the due date. You can switch them off for any invoice.' },
       { key: 'quote_terms', label: 'Terms and conditions', type: 'textarea', hint: 'Shown at the bottom of every quote. One point per line.', optional: true },
     ],
+  },
+  {
+    id: 'messages',
+    title: 'Messages to customers',
+    summary: 'The wording of quote, invoice and reminder emails',
+    icon: 'mail',
+    custom: 'messages',
   },
   {
     id: 'numbering',

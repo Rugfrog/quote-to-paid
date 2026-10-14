@@ -122,3 +122,142 @@ export interface CustomerDetail {
   jobs: { id: number; ref: string; title: string; status: string; start_date: string | null }[];
   invoices: { id: number; ref: string; status: string; issue_date: string; total_pence: number; amount_due_pence: number }[];
 }
+
+// ---------- Quotes ----------
+
+export type QuoteStatus = 'draft' | 'sent' | 'viewed' | 'accepted' | 'declined' | 'expired';
+export type QuoteSource = 'blank' | 'text' | 'voice' | 'photo';
+
+export interface QuoteLine {
+  id?: number;
+  description: string;
+  quantity_x100: number;
+  unit: Unit;
+  unit_price_pence: number | null;
+  price_item_id: number | null;
+  needs_price: boolean;
+  line_total_pence?: number;
+}
+
+export interface Totals {
+  subtotalPence: number;
+  vatPence: number;
+  totalPence: number;
+  unpricedLines: number;
+  depositPence: number;
+}
+
+export interface QuoteOption {
+  id: number;
+  name: string;
+  recommended: boolean;
+  lines: QuoteLine[];
+  totals: Totals;
+}
+
+export interface Quote {
+  id: number;
+  ref: string;
+  customer_id: number;
+  enquiry_id: number | null;
+  title: string;
+  status: QuoteStatus;
+  source: QuoteSource;
+  brief: string;
+  intro_notes: string;
+  exclusions: string[];
+  customer_questions: string[];
+  validity_days: number;
+  valid_until: string | null;
+  deposit_bp: number;
+  vat_registered: boolean;
+  vat_rate_bp: number;
+  public_token: string;
+  sent_at: string | null;
+  first_viewed_at: string | null;
+  last_viewed_at: string | null;
+  accepted_at: string | null;
+  accepted_name: string | null;
+  accepted_option_id: number | null;
+  declined_at: string | null;
+  decline_reason: string | null;
+  created_at: string;
+  updated_at: string;
+  editable: boolean;
+}
+
+export interface QuoteEvent {
+  id: number;
+  type: string;
+  actor: 'owner' | 'customer' | 'system';
+  detail: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface QuoteMessage {
+  id: number;
+  sender: 'customer' | 'owner';
+  body: string;
+  created_at: string;
+}
+
+export interface QuoteDetail {
+  quote: Quote;
+  options: QuoteOption[];
+  customer: Customer;
+  photos: { id: number; from: string; url: string; caption: string }[];
+  events: QuoteEvent[];
+  messages: QuoteMessage[];
+  ai?: { mode: 'claude' | 'demo'; notice: string | null; assumptions: string[]; added: number; flagged: number };
+  sent?: { channel: 'email' | 'sms'; address: string };
+}
+
+export interface QuoteSummary {
+  id: number;
+  ref: string;
+  title: string;
+  status: QuoteStatus;
+  customer_id: number;
+  customer_name: string;
+  total_pence: number;
+  option_count: number;
+  needs_price: boolean;
+  created_at: string;
+  updated_at: string;
+  sent_at: string | null;
+  first_viewed_at: string | null;
+  accepted_at: string | null;
+  valid_until: string | null;
+}
+
+export interface OutboxMessage {
+  id: number;
+  channel: 'email' | 'sms';
+  to_name: string;
+  to_address: string;
+  subject: string;
+  body: string;
+  links: { label: string; url: string }[];
+  template_key: string | null;
+  related_type: string | null;
+  related_id: number | null;
+  created_at: string;
+}
+
+export interface Notification {
+  id: number;
+  type: string;
+  title: string;
+  body: string;
+  link: string | null;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface MessageTemplate {
+  key: string;
+  label: string;
+  channel: 'email' | 'sms';
+  subject: string;
+  body: string;
+}

@@ -143,6 +143,7 @@ CREATE TABLE IF NOT EXISTS quotes (
   status             TEXT    NOT NULL DEFAULT 'draft'
                              CHECK (status IN ('draft', 'sent', 'viewed', 'accepted', 'declined', 'expired')),
   source             TEXT    NOT NULL DEFAULT 'blank' CHECK (source IN ('blank', 'text', 'voice', 'photo')),
+  brief              TEXT    NOT NULL DEFAULT '',    -- what the owner typed or said (private, never shown to the customer)
   intro_notes        TEXT    NOT NULL DEFAULT '',
   exclusions         TEXT    NOT NULL DEFAULT '[]',  -- JSON array of strings
   customer_questions TEXT    NOT NULL DEFAULT '[]',  -- JSON array of strings (suggested by the AI)

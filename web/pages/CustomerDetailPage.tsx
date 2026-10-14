@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+import { QuoteStatusPill } from '../components/status';
 import { formatAgo, formatDate } from '../../shared/format';
 import { api, errorMessage } from '../api';
 import { CustomerForm } from '../components/CustomerForm';
 import { Icon } from '../components/Icon';
 import { Banner, Button, ButtonLink, EmptyState, PageHeader, Pill, Sheet, Spinner } from '../components/ui';
-import type { CustomerDetail, Enquiry } from '../types';
+import type { CustomerDetail, Enquiry, QuoteStatus } from '../types';
 
 const SOURCE_LABELS: Record<string, string> = {
   phone: 'Phone call',
@@ -160,6 +161,13 @@ export function CustomerDetailPage() {
                 </span>
               </div>
               <p className="pre-line">{e.description}</p>
+              {e.status === 'new' && (
+                <div style={{ marginTop: 10 }}>
+                  <ButtonLink to={`/quotes/new?enquiry=${e.id}`} size="sm" variant="primary" icon="sparkle">
+                    Quote this
+                  </ButtonLink>
+                </div>
+              )}
               {e.photos && e.photos.length > 0 && (
                 <div className="photo-grid">
                   {e.photos.map((p) => (
@@ -174,14 +182,38 @@ export function CustomerDetailPage() {
         </ul>
       )}
 
-      <h2 className="section-title" style={{ marginTop: 28 }}>
-        Quotes, jobs and invoices
-      </h2>
-      <div className="card">
-        <EmptyState icon="quote" title="Nothing here yet">
-          Quotes, jobs and invoices for {c.name.split(' ')[0]} will show here once they’re created.
-        </EmptyState>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 28, marginBottom: 10 }}>
+        <h2 style={{ fontSize: '1.05rem' }}>Quotes</h2>
+        <ButtonLink to={`/quotes/new?customer=${c.id}`} icon="sparkle" size="sm">
+          New quote
+        </ButtonLink>
       </div>
+      {data.quotes.length === 0 ? (
+        <div className="card">
+          <EmptyState icon="quote" title="No quotes yet">
+            Quotes for {c.name.split(' ')[0]} will show here. Jobs and invoices follow in the next stages.
+          </EmptyState>
+        </div>
+      ) : (
+        <ul className="list card">
+          {data.quotes.map((q) => (
+            <li key={q.id}>
+              <Link to={`/quotes/${q.id}`} className="list-row">
+                <div className="grow">
+                  <div className="title">{q.title || 'Untitled quote'}</div>
+                  <div className="meta">
+                    {q.ref} · {formatDate(q.created_at)}
+                  </div>
+                </div>
+                <QuoteStatusPill status={q.status as QuoteStatus} />
+                <span className="chev">
+                  <Icon name="chevronRight" size={18} />
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <Sheet open={editing} onClose={() => setEditing(false)} title="Edit customer">
         <CustomerForm
