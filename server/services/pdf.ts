@@ -95,7 +95,12 @@ export function renderQuotePdf(db: DB, token: string, uploadsDir: string = UPLOA
 
   options.forEach((option) => {
     doc.moveDown(1.2);
-    ensureSpace(80);
+    // Keep an option's table and its totals on the same page when they fit on one.
+    doc.font('Helvetica').fontSize(10);
+    const linesHeight = option.lines.reduce((h, l) => h + doc.heightOfString(l.description, { width: colQty - left - 16 }) + 8, 0);
+    const optionHeight = (options.length > 1 ? 24 : 0) + 26 + linesHeight + 100;
+    const usable = doc.page.height - 48 - 60;
+    ensureSpace(optionHeight <= usable ? optionHeight : 80);
     if (options.length > 1) {
       doc.font('Helvetica-Bold').fontSize(12).fillColor(brand).text(`${option.name || 'Option'}${option.recommended ? '  (recommended)' : ''}`, left);
       doc.moveDown(0.3);
